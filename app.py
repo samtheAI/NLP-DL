@@ -22,6 +22,7 @@ def load_artifacts():
     vocabulary = json.loads(VOCABULARY_PATH.read_text(encoding="utf-8"))
     vectorizer = tf.keras.layers.TextVectorization(
         max_tokens=20_000,
+        ngrams=2,
         output_mode="int",
         output_sequence_length=300,
         vocabulary=vocabulary,
