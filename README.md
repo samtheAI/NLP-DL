@@ -29,12 +29,16 @@ Install Python 3.11 from [python.org](https://www.python.org/downloads/) and sel
 Open Command Prompt in the project folder and run:
 
 ```bat
+py -0p
+py -3.11 -c "import platform; print(platform.python_version(), platform.architecture()[0])"
 py -3.11 -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements-windows.txt
 streamlit run app.py
 ```
+
+The version check must print Python `3.11.x` and `64bit`. TensorFlow will not install with 32-bit Python. If `py -3.11` is not found, install the 64-bit Python 3.11 release from [python.org](https://www.python.org/downloads/release/python-3119/), then reopen the terminal.
 
 For PowerShell, activate the environment with:
 
@@ -53,7 +57,7 @@ Then start the app:
 
 ```powershell
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements-windows.txt
 streamlit run app.py
 ```
 
@@ -83,6 +87,32 @@ Open the local URL printed in the terminal, usually `http://localhost:8501`.
 - Use Python 3.11 because the pinned TensorFlow version may not support newer Python versions.
 - If `streamlit` is not recognized, activate the virtual environment and run `python -m streamlit run app.py`.
 - If the model artifacts are missing, run `sentiment_dl_training.ipynb` from beginning to end.
+
+### Windows: `No matching distribution found for tensorflow-cpu`
+
+Use the Windows requirements file, which installs the correct TensorFlow package for Windows:
+
+```bat
+deactivate
+rmdir /s /q .venv
+py -3.11 -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements-windows.txt
+python -c "import tensorflow as tf; print(tf.__version__)"
+python -m streamlit run app.py
+```
+
+In PowerShell, replace the removal and activation commands with:
+
+```powershell
+deactivate
+Remove-Item -Recurse -Force .venv
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+Do not reuse a virtual environment created with Python 3.8, 32-bit Python, or another unsupported interpreter. Creating a new environment with `py -3.11 -m venv .venv` ensures that `pip` belongs to Python 3.11.
 
 ## Deployment
 
