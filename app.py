@@ -1,5 +1,6 @@
 """Streamlit app for IMDb sentiment prediction with a deep-learning model."""
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -8,17 +9,24 @@ import tensorflow as tf
 
 
 MODEL_PATH = Path(__file__).parent / "artifacts" / "sentiment_dl.keras"
+VOCABULARY_PATH = Path(__file__).parent / "artifacts" / "vocabulary.json"
 
 
 @st.cache_resource
-def load_model():
-    """Load the trained model once for all predictions."""
-    if not MODEL_PATH.exists():
+def load_artifacts():
+    """Load the vocabulary and trained neural network once."""
+    if not MODEL_PATH.exists() or not VOCABULARY_PATH.exists():
         raise FileNotFoundError(
-            "Model artifact not found. Run sentiment_dl_training.ipynb first "
-            "and save the model to artifacts/sentiment_dl.keras."
+            "Model artifacts not found. Run sentiment_dl_training.ipynb first."
         )
-    return tf.keras.models.load_model(MODEL_PATH)
+    vocabulary = json.loads(VOCABULARY_PATH.read_text(encoding="utf-8"))
+    vectorizer = tf.keras.layers.TextVectorization(
+        max_tokens=20_000,
+        output_mode="int",
+        output_sequence_length=300,
+        vocabulary=vocabulary,
+    )
+    return vectorizer, tf.keras.models.load_model(MODEL_PATH, compile=False)
 
 
 st.set_page_config(page_title="IMDb DL Sentiment Classifier", page_icon="🎬")
@@ -36,12 +44,11 @@ if st.button("Predict sentiment", type="primary", use_container_width=True):
         st.warning("Please enter a movie review.")
     else:
         try:
-            model = load_model()
+            vectorizer, model = load_artifacts()
+            vectorized_review = vectorizer(tf.constant([review.strip()]))
             positive_probability = float(
                 np.asarray(
-                    model.predict(
-                        np.asarray([review.strip()], dtype=object), verbose=0
-                    )
+                    model.predict(vectorized_review, verbose=0)
                 ).reshape(-1)[0]
             )
             negative_probability = 1.0 - positive_probability
