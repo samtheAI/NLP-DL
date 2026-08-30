@@ -38,7 +38,11 @@ if st.button("Predict sentiment", type="primary", use_container_width=True):
         try:
             model = load_model()
             positive_probability = float(
-                np.asarray(model.predict([review.strip()], verbose=0)).reshape(-1)[0]
+                np.asarray(
+                    model.predict(
+                        np.asarray([review.strip()], dtype=object), verbose=0
+                    )
+                ).reshape(-1)[0]
             )
             negative_probability = 1.0 - positive_probability
 
@@ -60,4 +64,4 @@ if st.button("Predict sentiment", type="primary", use_container_width=True):
         except FileNotFoundError as error:
             st.error(str(error))
 
-st.caption("Teaching model: TextVectorization + Embedding + Bidirectional LSTM.")
+st.caption("Teaching model: TextVectorization + Embedding + Global Average Pooling.")
